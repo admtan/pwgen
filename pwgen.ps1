@@ -1,10 +1,10 @@
-﻿# パラメーター定義
+# パラメーター定義
 param(
 	[int]$len = 20, # 生成する文字列の長さ
 	[switch]$num, # 数字のみを使用するかどうか
 	[switch]$port, # エフェメラルポート番号を生成するかどうか
 	[switch]$sym, # 記号を含むかどうか
-	[switch]$time, # 時刻を生成するかどうか
+	[switch]$date, # 時刻を生成するかどうか
 	[switch]$uuid, # UUID を生成するかどうか
 	[switch]$uupw, # UUID ベースのパスワードを生成するかどうか
 	[switch]$tinyurl, # tinyurl 用の文字列を生成するかどうか
@@ -60,6 +60,22 @@ function GenerateRandomPort {
 	$portNumber = [BitConverter]::ToUInt16($portBytes, 0) % $portRange + $portMin
 
 	return $portNumber
+}
+
+# 日付生成のための関数
+function GenerateRandomDate {
+	param(
+		[int]$daysInFuture = 14 # 未来の日付範囲 (既定値は 14 日間)
+	)
+
+	# 現在の日付を取得
+	$currentDate = Get-Date
+	# 0 から指定された日数の範囲でランダムな日数を生成
+	$daysToAdd = Get-Random -Minimum 1 -Maximum $daysInFuture
+	# 現在の日付にランダムな日数を加算
+	$randomDate = $currentDate.AddDays($daysToAdd)
+	# 日付文字列をフォーマットして返却 (時刻部分は除去)
+	return $randomDate.ToString("yyyy-MM-dd")
 }
 
 # 時刻生成のための関数
@@ -148,8 +164,8 @@ if ($help) {
         - プライベートポート用にエフェメラルポート番号を生成する場合に指定します。(範囲 49152 - 65535)
     -sym
         - 記号を使用する場合に指定します。
-    -time
-        - ランダムな時刻を生成する場合に指定します。
+    -date
+        - ランダムな日付と時刻を生成する場合に指定します。
     -uuid
         - UUID を生成する場合に指定します。
     -uupw
@@ -170,8 +186,8 @@ if ($help) {
         - 記号を含む 16 文字のパスワードを生成します。
     pwgen -len 4 -num
         - 数字の 4 桁のランダムな文字列を生成します。
-    pwgen -time
-        - ランダムな時刻を生成します。
+    pwgen -date
+        - ランダムな日付と時刻を生成します。
     pwgen -port
         - エフェメラルポート番号を生成します。
     pwgen -uuid
@@ -190,9 +206,10 @@ if ($help) {
 if ($port) {
 	$ephemeralPort = GenerateRandomPort -portMin 49152 -portMax 65535
 	Write-Output $ephemeralPort
-} elseif ($time) {
+} elseif ($date) {
+	$randomDate = GenerateRandomDate -daysInFuture 14
 	$randomTime = GenerateRandomTime
-	Write-Output $randomTime
+	Write-Output "$randomDate $randomTime"
 } elseif ($uuid -or $uupw) {
 	$uuidString = GenerateCustomUUID
 	if ($uupw) {
